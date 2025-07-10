@@ -17,7 +17,7 @@ import FormElements from "./pages/Forms/FormElements";
 import AppLayout from "./layout/AppLayout";
 import { ScrollToTop } from "./components/common/ScrollToTop";
 import Home from "./pages/Dashboard/Home";
-import Products from "./pages/Products/Products";
+import Products from "./pages/Products/ProductItems";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 
 export default function App() {
