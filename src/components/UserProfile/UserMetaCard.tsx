@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { decryptData } from "../../utilities/encryption";
 import axios from "axios";
 import { API_CONFIG, apiUrl } from "../../utilities/config";
@@ -16,7 +16,6 @@ interface UserData {
 }
 
 export default function UserMetaCard() {
-  const [userData, setUserData] = useState<UserData | null>(null);
   const [fetchUserData, setFetchUserData] = useState<UserData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -27,7 +26,6 @@ export default function UserMetaCard() {
         const encryptedUserData = localStorage.getItem("userData");
         if (encryptedUserData) {
           const decryptedUserData = decryptData(encryptedUserData);
-          setUserData(decryptedUserData);
 
           // Fetch latest user data from API
           const dbUser = await axios.get(
