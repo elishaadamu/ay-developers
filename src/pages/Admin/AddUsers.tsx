@@ -1,9 +1,12 @@
 import { useState, useEffect } from "react";
 import { notification } from "antd";
+import axios from "axios";
 import ComponentCard from "../../components/common/ComponentCard";
 import Label from "../../components/form/Label";
 import Input from "../../components/form/input/InputField";
 import Select from "../../components/form/Select";
+import { API_CONFIG, apiUrl } from "../../utilities/config";
+import PageMeta from "../../components/common/PageMeta";
 
 interface UserForm {
   firstName: string;
@@ -37,6 +40,10 @@ interface LgaOption {
 }
 
 export default function AddUsers() {
+  <PageMeta
+    title="AY Developers - Add Users"
+    description="This is the Add Users page for AY Developers"
+  />;
   const [formData, setFormData] = useState<UserForm>({
     firstName: "",
     lastName: "",
@@ -76,21 +83,19 @@ export default function AddUsers() {
   const getStatesFromApi = async () => {
     try {
       setLoadingStates(true);
-      let response = await fetch("https://nga-states-lga.onrender.com/fetch");
+      const response = await axios.get(
+        "https://nga-states-lga.onrender.com/fetch"
+      );
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      let json = await response.json();
       let statesArray = null;
+      const data = response.data;
 
-      if (json.states && Array.isArray(json.states)) {
-        statesArray = json.states;
-      } else if (json.data && Array.isArray(json.data)) {
-        statesArray = json.data;
-      } else if (Array.isArray(json)) {
-        statesArray = json;
+      if (data.states && Array.isArray(data.states)) {
+        statesArray = data.states;
+      } else if (data.data && Array.isArray(data.data)) {
+        statesArray = data.data;
+      } else if (Array.isArray(data)) {
+        statesArray = data;
       } else {
         throw new Error("Invalid API response structure");
       }
@@ -103,16 +108,15 @@ export default function AddUsers() {
       setStateOptions(formattedStates);
     } catch (error) {
       console.error("Error fetching states:", error);
-      // Fallback to default states
-      const fallbackStates = [
+      // Fallback to default states if API fails
+      setStateOptions([
         { value: "lagos", label: "Lagos" },
         { value: "abuja", label: "FCT - Abuja" },
         { value: "kano", label: "Kano" },
         { value: "ogun", label: "Ogun" },
         { value: "rivers", label: "Rivers" },
         { value: "kaduna", label: "Kaduna" },
-      ];
-      setStateOptions(fallbackStates);
+      ]);
     } finally {
       setLoadingStates(false);
     }
@@ -122,25 +126,21 @@ export default function AddUsers() {
   const getLgasFromApi = async (stateName: string) => {
     try {
       setLoadingLgas(true);
-      let response = await fetch(
+      const response = await axios.get(
         `https://nga-states-lga.onrender.com/?state=${encodeURIComponent(
           stateName
         )}`
       );
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      let json = await response.json();
       let lgaArray = null;
+      const data = response.data;
 
-      if (json.lga && Array.isArray(json.lga)) {
-        lgaArray = json.lga;
-      } else if (json.data && Array.isArray(json.data)) {
-        lgaArray = json.data;
-      } else if (Array.isArray(json)) {
-        lgaArray = json;
+      if (data.lga && Array.isArray(data.lga)) {
+        lgaArray = data.lga;
+      } else if (data.data && Array.isArray(data.data)) {
+        lgaArray = data.data;
+      } else if (Array.isArray(data)) {
+        lgaArray = data;
       } else {
         throw new Error("Invalid LGA API response structure");
       }
@@ -153,15 +153,13 @@ export default function AddUsers() {
       setLgaOptions(formattedLgas);
     } catch (error) {
       console.error("Error fetching LGAs:", error);
-      // Fallback to default LGAs
-      const fallbackLgas = [
+      setLgaOptions([
         { value: "ikeja", label: "Ikeja" },
         { value: "surulere", label: "Surulere" },
         { value: "mainland", label: "Lagos Mainland" },
         { value: "island", label: "Lagos Island" },
         { value: "alimosho", label: "Alimosho" },
-      ];
-      setLgaOptions(fallbackLgas);
+      ]);
     } finally {
       setLoadingLgas(false);
     }
@@ -182,6 +180,9 @@ export default function AddUsers() {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // Reset the file input value first
+    const fileInput = e.target as HTMLInputElement;
+
     // Check file size (50KB = 50 * 1024 bytes)
     const maxSize = 50 * 1024;
     if (file.size > maxSize) {
@@ -190,8 +191,9 @@ export default function AddUsers() {
         description:
           "Image size must be less than 50KB. Please compress your image and try again.",
         duration: 4,
+        placement: "topRight",
       });
-      e.target.value = ""; // Clear the input
+      fileInput.value = ""; // Clear the input
       return;
     }
 
@@ -203,8 +205,9 @@ export default function AddUsers() {
         description:
           "Please select a valid image file (JPEG, JPG, PNG, or GIF).",
         duration: 4,
+        placement: "topRight",
       });
-      e.target.value = ""; // Clear the input
+      fileInput.value = ""; // Clear the input
       return;
     }
 
@@ -217,13 +220,16 @@ export default function AddUsers() {
         message: "Image Uploaded",
         description: "Profile image uploaded successfully!",
         duration: 3,
+        placement: "topRight",
       });
     } catch (error) {
       notification.error({
         message: "Upload Error",
         description: "Failed to process the image. Please try again.",
         duration: 4,
+        placement: "topRight",
       });
+      fileInput.value = ""; // Clear the input
     }
   };
 
@@ -231,6 +237,11 @@ export default function AddUsers() {
   const removeImage = () => {
     setFormData((prev) => ({ ...prev, passport: "" }));
     setImagePreview("");
+    // Clear the file input
+    const fileInput = document.getElementById("passport") as HTMLInputElement;
+    if (fileInput) {
+      fileInput.value = "";
+    }
   };
 
   // Fetch states on component mount
@@ -328,30 +339,33 @@ export default function AddUsers() {
           phoneNumber: formData.phoneNumber,
           passport: formData.passport, // Base64 string
         };
-        console.log("Submitting user data:", payload);
-        // Make API call (replace with your actual API endpoint)
-        const response = await fetch("/api/users", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(payload),
-        });
 
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const result = await response.json();
+        console.log("Payload to be sent:", payload);
+        // Make API call using axios
+        const response = await axios.post(
+          apiUrl(API_CONFIG.ENDPOINTS.AUTH.AddUsers),
+          payload
+        );
+        console.log("Full response", response);
 
         notification.success({
           message: "User Added Successfully",
           description:
-            "The new user has been added to the system successfully!",
+            "The new " +
+            `${formData.role}` +
+            " role has been added to the system successfully!",
           duration: 4,
+          placement: "topRight",
         });
 
-        // Reset form
+        // Clear form and reset file input
+        const fileInput = document.getElementById(
+          "passport"
+        ) as HTMLInputElement;
+        if (fileInput) {
+          fileInput.value = "";
+        }
+
         setFormData({
           firstName: "",
           lastName: "",
@@ -374,21 +388,33 @@ export default function AddUsers() {
         setSuccess({});
         setLgaOptions([]);
         setImagePreview("");
-
-        console.log("User created:", result);
       } catch (error) {
         console.error("Error creating user:", error);
-        notification.error({
-          message: "Submission Failed",
-          description: "Failed to add user. Please try again.",
-          duration: 4,
-        });
+
+        if (axios.isAxiosError(error)) {
+          notification.error({
+            message: "Submission Failed",
+            description:
+              error.response?.data?.message ||
+              "Failed to add user. Please try again.",
+            duration: 4,
+            placement: "topRight",
+          });
+        } else {
+          notification.error({
+            message: "Submission Failed",
+            description: "An unexpected error occurred. Please try again.",
+            duration: 4,
+            placement: "topRight",
+          });
+        }
       }
     } else {
       notification.warning({
         message: "Form Validation Error",
         description: "Please fix the errors in the form and try again.",
         duration: 4,
+        placement: "topRight",
       });
     }
 
@@ -619,6 +645,14 @@ export default function AddUsers() {
               disabled={isSubmitting}
               className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-700 disabled:opacity-50"
               onClick={() => {
+                // Clear file input
+                const fileInput = document.getElementById(
+                  "passport"
+                ) as HTMLInputElement;
+                if (fileInput) {
+                  fileInput.value = "";
+                }
+
                 setFormData({
                   firstName: "",
                   lastName: "",
