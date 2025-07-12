@@ -21,9 +21,16 @@ type NavItem = {
   icon: React.ReactNode;
   path?: string;
   onClick?: () => void; // Add onClick handler type
-  subItems?: { name: string; path: string; pro?: boolean; new?: boolean }[];
+  subItems?: {
+    name: string;
+    path: string;
+    pro?: boolean;
+    new?: boolean;
+    icon?: React.ReactNode;
+  }[];
 };
 
+// Alternative using existing icons
 const navItems: NavItem[] = [
   {
     icon: <GridIcon />,
@@ -34,23 +41,26 @@ const navItems: NavItem[] = [
     icon: <ListIcon />,
     name: "Main Menu",
     subItems: [
-      { name: "Products", path: "/products", pro: false },
-      { name: "Ambassadors", path: "/ambassadors", pro: false },
-      { name: "Performance", path: "/performance", pro: false },
-      { name: "Promotion", path: "/promotion", pro: false },
-      { name: "Notification", path: "/notification", pro: false },
-      { name: "Training", path: "/training", pro: false },
+      { name: "Add Users", path: "/add-users", icon: <UserCircleIcon /> },
+      { name: "Tickets", path: "/tickets", icon: <ListIcon /> },
+      { name: "Products", path: "/products", icon: <GridIcon /> },
+      { name: "Customers", path: "/customers", icon: <UserCircleIcon /> },
+      { name: "Promotions", path: "/promotions", icon: <PlugInIcon /> },
       {
-        name: "Accounts & Settlement",
-        path: "/accounts-settlement",
-        pro: false,
+        name: "Payout & Withdrawal",
+        path: "/payout-withdrawal",
+        icon: <HorizontaLDots />,
       },
+      { name: "Reports", path: "/reports", icon: <ChevronDownIcon /> },
     ],
   },
   {
     icon: <UserCircleIcon />,
-    name: "User Profile",
-    path: "/profile",
+    name: "Profile",
+    subItems: [
+      { name: "Admin Profile", path: "/profile", icon: <UserCircleIcon /> },
+      { name: "Settings", path: "/settings", icon: <PlugInIcon /> },
+    ],
   },
 ];
 
@@ -230,7 +240,14 @@ const AppSidebar: React.FC = () => {
                           : "menu-dropdown-item-inactive"
                       }`}
                     >
-                      {subItem.name}
+                      <span className="flex items-center gap-2">
+                        {subItem.icon && (
+                          <span className="w-4 h-4 flex-shrink-0">
+                            {subItem.icon}
+                          </span>
+                        )}
+                        {subItem.name}
+                      </span>
                       <span className="flex items-center gap-1 ml-auto">
                         {subItem.new && (
                           <span

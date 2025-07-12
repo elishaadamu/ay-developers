@@ -2,7 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router";
 import SignIn from "./pages/AuthPages/SignIn";
 import SignUp from "./pages/AuthPages/SignUp";
 import NotFound from "./pages/OtherPage/NotFound";
-import UserProfiles from "./pages/UserProfiles";
+import AdminProfile from "./pages/AdminProfile";
 import Videos from "./pages/UiElements/Videos";
 import Images from "./pages/UiElements/Images";
 import Alerts from "./pages/UiElements/Alerts";
@@ -17,14 +17,24 @@ import FormElements from "./pages/Forms/FormElements";
 import AppLayout from "./layout/AppLayout";
 import { ScrollToTop } from "./components/common/ScrollToTop";
 import Home from "./pages/Dashboard/Home";
-import Products from "./pages/Products/ProductItems";
+
 import ProtectedRoute from "./components/auth/ProtectedRoute";
+// Add new imports for sidebar pages
+import Products from "./pages/Admin/ProductItems";
+import Tickets from "./pages/Admin/Tickets";
+import Customers from "./pages/Admin/Customers";
+import Promotions from "./pages/Admin/Promotions";
+import PayoutWithdrawal from "./pages/Admin/PayoutWithdrawal";
+import Reports from "./pages/Admin/Reports";
+import Settings from "./pages/Admin/Settings";
+import AddUsers from "./pages/Admin/AddUsers";
 
 export default function App() {
   return (
     <>
       <Router>
         <ScrollToTop />
+
         <Routes>
           {/* Dashboard Layout - Protected */}
           <Route
@@ -34,15 +44,23 @@ export default function App() {
               </ProtectedRoute>
             }
           >
-            {/* Main menu */}
-
-            <Route index path="/products" element={<Products />} />
-
-            {/* Products Page */}
+            {/* Dashboard */}
             <Route index path="/" element={<Home />} />
 
+            {/* Main Menu Pages */}
+            <Route path="/add-users" element={<AddUsers />} />
+            <Route path="/tickets" element={<Tickets />} />
+            <Route path="/products" element={<Products />} />
+            <Route path="/customers" element={<Customers />} />
+            <Route path="/promotions" element={<Promotions />} />
+            <Route path="/payout-withdrawal" element={<PayoutWithdrawal />} />
+            <Route path="/reports" element={<Reports />} />
+
+            {/* Profile Pages */}
+            <Route path="/profile" element={<AdminProfile />} />
+            <Route path="/settings" element={<Settings />} />
+
             {/* Others Page */}
-            <Route path="/profile" element={<UserProfiles />} />
             <Route path="/calendar" element={<Calendar />} />
 
             {/* Forms */}

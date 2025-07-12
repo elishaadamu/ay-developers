@@ -6,6 +6,7 @@ export const API_CONFIG = {
       SIGNIN: "/api/auth/login",
       UserData: "/api/users/profile/",
       UserUpdate: "/api/auth/updateProfile",
+      AddProducts: "/api/products/add",
     },
   },
 };
