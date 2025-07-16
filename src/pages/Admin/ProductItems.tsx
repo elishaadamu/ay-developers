@@ -111,12 +111,13 @@ export default function Products() {
 
   // Add product via API
   const addProduct = async (
-    productData: Omit<Product, "id" | "createdDate">
+    productData: Omit<Product, "id" | "createdDate" | "salesCount">
   ): Promise<void> => {
     try {
       const payload = {
         ...productData,
         createdDate: new Date().toISOString(),
+        salesCount: 0, // Initialize with 0 sales for new products
       };
 
       console.log("📤 Sending product payload:", payload);

@@ -18,10 +18,9 @@ import FormElements from "./pages/Forms/FormElements";
 import AppLayout from "./layout/AppLayout";
 import { ScrollToTop } from "./components/common/ScrollToTop";
 import Home from "./pages/Dashboard/Home";
-import { decryptData, encryptData } from "./utilities/encryption";
+import { decryptData } from "./utilities/encryption";
 import { API_CONFIG, apiUrl } from "./utilities/config";
 import axios from "axios";
-import { Modal, notification, Upload, Button as AntButton, Spin } from "antd";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 // Add new imports for sidebar pages
 import Products from "./pages/Admin/ProductItems";
@@ -34,13 +33,7 @@ import Settings from "./pages/Admin/Settings";
 import AddUsers from "./pages/Admin/AddUsers";
 
 export default function App() {
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [userData, setUserData] = useState<UserData | null>(null);
-  const [formData, setFormData] = useState<UserData>({});
-  const [isLoading, setIsLoading] = useState(false);
-  const [fetchUserData, setFetchUserData] = useState<UserData | null>(null);
-  const [api, contextHolder] = notification.useNotification();
-  const [isDataLoading, setIsDataLoading] = useState(true); // Loading state
 
   interface UserData {
     id?: string;
@@ -61,7 +54,6 @@ export default function App() {
       if (encryptedUserData) {
         const decryptedUserData = decryptData(encryptedUserData);
         setUserData(decryptedUserData);
-        setFormData(decryptedUserData);
       }
     } catch (error) {
       console.error("Failed to decrypt user data:", error);
@@ -71,21 +63,12 @@ export default function App() {
   useEffect(() => {
     const dbUsername = async () => {
       try {
-        setIsDataLoading(true);
         const dbUser = await axios.get(
           apiUrl(API_CONFIG.ENDPOINTS.AUTH.UserData + userData?.id)
         );
-        setFetchUserData(dbUser.data.user);
         console.log("db APP.jsx", dbUser.data.user);
       } catch (error) {
         console.log(error);
-        api.error({
-          message: "Error",
-          description: "Failed to load user data",
-          placement: "topRight",
-        });
-      } finally {
-        setIsDataLoading(false);
       }
     };
     if (userData?.id) {

@@ -9,7 +9,7 @@ import {
   Upload,
   InputNumber,
 } from "antd";
-import type { RcFile, UploadFile, UploadProps } from "antd/es/upload/interface";
+import type { RcFile, UploadFile } from "antd/es/upload/interface";
 import {
   PlusOutlined,
   CloudServerOutlined,
