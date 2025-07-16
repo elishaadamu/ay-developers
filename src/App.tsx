@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router";
+import { useEffect, useState } from "react";
 import SignIn from "./pages/AuthPages/SignIn";
 import SignUp from "./pages/AuthPages/SignUp";
 import NotFound from "./pages/OtherPage/NotFound";
@@ -17,7 +18,10 @@ import FormElements from "./pages/Forms/FormElements";
 import AppLayout from "./layout/AppLayout";
 import { ScrollToTop } from "./components/common/ScrollToTop";
 import Home from "./pages/Dashboard/Home";
-
+import { decryptData, encryptData } from "./utilities/encryption";
+import { API_CONFIG, apiUrl } from "./utilities/config";
+import axios from "axios";
+import { Modal, notification, Upload, Button as AntButton, Spin } from "antd";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 // Add new imports for sidebar pages
 import Products from "./pages/Admin/ProductItems";
@@ -30,6 +34,65 @@ import Settings from "./pages/Admin/Settings";
 import AddUsers from "./pages/Admin/AddUsers";
 
 export default function App() {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [userData, setUserData] = useState<UserData | null>(null);
+  const [formData, setFormData] = useState<UserData>({});
+  const [isLoading, setIsLoading] = useState(false);
+  const [fetchUserData, setFetchUserData] = useState<UserData | null>(null);
+  const [api, contextHolder] = notification.useNotification();
+  const [isDataLoading, setIsDataLoading] = useState(true); // Loading state
+
+  interface UserData {
+    id?: string;
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+    phone?: string;
+    role?: string;
+    photo?: string;
+    country?: string;
+    state?: string;
+  }
+  useEffect(() => {
+    // Decrypt and load user data when component mounts
+    try {
+      const encryptedUserData = localStorage.getItem("userData");
+
+      if (encryptedUserData) {
+        const decryptedUserData = decryptData(encryptedUserData);
+        setUserData(decryptedUserData);
+        setFormData(decryptedUserData);
+      }
+    } catch (error) {
+      console.error("Failed to decrypt user data:", error);
+    }
+  }, []);
+  // Update the useEffect that fetches data
+  useEffect(() => {
+    const dbUsername = async () => {
+      try {
+        setIsDataLoading(true);
+        const dbUser = await axios.get(
+          apiUrl(API_CONFIG.ENDPOINTS.AUTH.UserData + userData?.id)
+        );
+        setFetchUserData(dbUser.data.user);
+        console.log("db APP.jsx", dbUser.data.user);
+      } catch (error) {
+        console.log(error);
+        api.error({
+          message: "Error",
+          description: "Failed to load user data",
+          placement: "topRight",
+        });
+      } finally {
+        setIsDataLoading(false);
+      }
+    };
+    if (userData?.id) {
+      dbUsername();
+    }
+  }, [userData?.id]);
+
   return (
     <>
       <Router>

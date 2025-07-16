@@ -218,21 +218,21 @@ export default function Products() {
         {/* Header Section with Action Buttons */}
         <div className="flex flex-col gap-4 mb-6 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h3 className="mb-2 font-semibold text-gray-800 dark:text-white/90 text-2xl">
+            <h3 className="mb-2 font-semibold text-gray-800 dark:text-white/90 text-xl md:text-2xl">
               Products Management
             </h3>
-            <p className="text-gray-600 dark:text-gray-400">
+            <p className="text-gray-600  dark:text-gray-400 text-[12px] md:text-sm">
               Manage products, track performance, and handle S&G lists
             </p>
           </div>
 
-          <div className="flex flex-wrap w-1/2 gap-3">
+          <div className="flex flex-wrap justify-center md:justify-end gap-2 w-full mt-[0px] md:mt-[-20px]">
             <button
               onClick={() => setShowAddModal(true)}
-              className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-blue-700"
+              className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-[11px] md:text-[14px] font-medium text-white hover:bg-blue-700"
             >
               <svg
-                className="h-5 w-5"
+                className="h-3 w-3 md:h-5 md:w-5"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -249,10 +249,10 @@ export default function Products() {
 
             <button
               onClick={() => setShowSGListModal(true)}
-              className="inline-flex items-center gap-2 rounded-lg bg-purple-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-purple-700"
+              className="inline-flex items-center gap-2 rounded-lg bg-purple-600 px-4 py-2.5 text-[11px] md:text-[14px] font-medium text-white hover:bg-purple-700"
             >
               <svg
-                className="h-5 w-5"
+                className="h-3 w-3 md:h-5 md:w-5"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -269,10 +269,10 @@ export default function Products() {
 
             <button
               onClick={() => setShowPerformanceModal(true)}
-              className="inline-flex items-center gap-2 rounded-lg bg-green-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-green-700"
+              className="inline-flex items-center gap-2 rounded-lg bg-green-600 px-4 py-2.5 text-[11px] md:text-[14px] font-medium text-white hover:bg-green-700"
             >
               <svg
-                className="h-5 w-5"
+                className="h-3 w-3 md:h-5 md:w-5"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
