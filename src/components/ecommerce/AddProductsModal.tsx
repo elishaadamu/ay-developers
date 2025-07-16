@@ -8,6 +8,7 @@ import {
   message,
   Upload,
   InputNumber,
+  notification,
 } from "antd";
 import type { RcFile, UploadFile } from "antd/es/upload/interface";
 import {
@@ -22,7 +23,7 @@ interface Product {
   name: string;
   price: number;
   description: string;
-  images: string[];
+  images: string; // Changed from string[] to string
   status: "Active" | "Inactive";
 }
 
@@ -41,16 +42,90 @@ export default function AddProductModal({
 }: AddProductModalProps) {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
-  const [imageUrls, setImageUrls] = useState<string[]>([]);
+  const [imageUrl, setImageUrl] = useState<string>(""); // Changed from imageUrls array
+  const [api, contextHolder] = notification.useNotification();
 
+  // Modified image upload handler
+  const handleImageUpload = (file: RcFile) => {
+    return new Promise<boolean>((resolve, reject) => {
+      // Validate file type
+      if (!allowedFileTypes.includes(file.type)) {
+        api.error({
+          message: "Invalid file type",
+          description: "You can only upload JPG, JPEG, PNG, or WebP files!",
+          placement: "topRight",
+        });
+        resolve(false);
+        return;
+      }
+
+      // Validate file size (50KB)
+      const fileSizeKB = file.size / 1024;
+      if (fileSizeKB > 50) {
+        api.error({
+          message: "File too large",
+          description: `Image must be smaller than 50KB. Current size: ${Math.round(
+            fileSizeKB
+          )}KB`,
+          placement: "topRight",
+        });
+        resolve(false);
+        return;
+      }
+
+      // Convert to base64
+      const reader = new FileReader();
+      reader.onload = () => {
+        const base64String = reader.result as string;
+        setImageUrl(base64String); // Set single image URL
+
+        api.success({
+          message: "Image uploaded successfully!",
+          description: "The image has been added to the product",
+          placement: "topRight",
+          duration: 3,
+        });
+
+        resolve(false);
+      };
+
+      reader.onerror = () => {
+        api.error({
+          message: "Upload failed",
+          description: "Failed to process the image. Please try again.",
+          placement: "topRight",
+        });
+        reject(false);
+      };
+
+      reader.readAsDataURL(file);
+    });
+  };
+
+  // Modified submit handler
   const handleSubmit = async (values: Product) => {
     setLoading(true);
     try {
-      await onSubmit(values);
+      const productData = {
+        ...values,
+        images: imageUrl, // Changed from imageUrls array to single imageUrl
+      };
+
+      await onSubmit(productData);
       form.resetFields();
-      message.success("Product added successfully!");
+      setImageUrl(""); // Clear single image
+      api.success({
+        message: "Success!",
+        description: "Product added successfully.",
+        placement: "topRight",
+      });
+      onClose();
     } catch (error) {
-      message.error("Failed to add product. Please try again.");
+      api.error({
+        message: "Failed to add product",
+        description: "Please try again.",
+        placement: "topRight",
+      });
     } finally {
       setLoading(false);
     }
@@ -70,153 +145,145 @@ export default function AddProductModal({
   ];
   const maxFileSize = 0.5 * 1024 * 1024; // 500KB
 
-  // Image upload handler with validation
-  const handleImageUpload = async (file: RcFile) => {
-    try {
-      // Validate file type
-      if (!allowedFileTypes.includes(file.type)) {
-        message.error("Please upload an image file (JPG, JPEG, PNG, or WebP)");
-        return false;
-      }
-
-      // Validate file size
-      if (file.size > maxFileSize) {
-        message.error("Image must be smaller than 2MB");
-        return false;
-      }
-
-      const fakeUrl = URL.createObjectURL(file);
-      setImageUrls((prev) => [...prev, fakeUrl]);
-      return false; // Prevent default upload behavior
-    } catch (error) {
-      message.error("Failed to upload image");
-      return false;
-    }
-  };
-
-  // Add image removal handler
-  const handleImageRemove = (file: UploadFile) => {
-    const newImageUrls = imageUrls.filter((url) => url !== file.url);
-    setImageUrls(newImageUrls);
-  };
-
+  // Modified Form.Item for single image
   return (
-    <Modal
-      title="Add New Product"
-      open={open}
-      onCancel={onClose}
-      footer={null}
-      width={800}
-      destroyOnClose
-    >
-      <Form
-        form={form}
-        layout="vertical"
-        onFinish={handleSubmit}
-        requiredMark={false}
+    <>
+      {contextHolder}
+      <Modal
+        title="Add New Product"
+        open={open}
+        onCancel={onClose}
+        footer={null}
+        width={800}
+        destroyOnClose
       >
-        <Form.Item
-          label="Product Name"
-          name="name"
-          rules={[
-            { required: true, message: "Please select a product" },
-            { min: 2, message: "Product name must be at least 2 characters" },
-          ]}
+        <Form
+          form={form}
+          layout="vertical"
+          onFinish={handleSubmit}
+          requiredMark={false}
         >
-          <Select size="large" placeholder="Select product">
-            <Option value="Reseller Hosting">
-              <div className="flex items-center gap-2">
-                <CloudServerOutlined className="text-lg" />
-                <span>Reseller Hosting</span>
-              </div>
-            </Option>
-            <Option value="Website Development">
-              <div className="flex items-center gap-2">
-                <DesktopOutlined className="text-lg" />
-                <span>Website Development</span>
-              </div>
-            </Option>
-            <Option value="Console Management">
-              <div className="flex items-center gap-2">
-                <SettingOutlined className="text-lg" />
-                <span>Console Management</span>
-              </div>
-            </Option>
-          </Select>
-        </Form.Item>
-
-        <Form.Item
-          label="Price"
-          name="price"
-          rules={[{ required: true, message: "Please enter product price" }]}
-        >
-          <InputNumber
-            prefix="₦"
-            className="w-full"
-            min={0}
-            step={0.01}
-            size="large"
-          />
-        </Form.Item>
-
-        <Form.Item
-          label="Description"
-          name="description"
-          rules={[
-            { required: true, message: "Please enter product description" },
-            { min: 10, message: "Description must be at least 10 characters" },
-          ]}
-        >
-          <Input.TextArea rows={3} size="large" />
-        </Form.Item>
-
-        <Form.Item
-          label="Images"
-          name="images"
-          rules={[
-            { required: true, message: "Please upload at least one image" },
-          ]}
-        >
-          <Upload
-            listType="picture-card"
-            fileList={imageUrls.map((url, index) => ({
-              uid: `-${index}`,
-              name: `image-${index}`,
-              status: "done",
-              url,
-            }))}
-            beforeUpload={handleImageUpload}
-            onRemove={handleImageRemove}
-            accept=".jpg,.jpeg,.png,.webp"
+          <Form.Item
+            label="Product Name"
+            name="name"
+            rules={[
+              { required: true, message: "Please select a product" },
+              { min: 2, message: "Product name must be at least 2 characters" },
+            ]}
           >
-            {imageUrls.length >= 8 ? null : (
-              <div>
-                <PlusOutlined />
-                <div className="mt-2">Upload</div>
-              </div>
-            )}
-          </Upload>
-          <div className="mt-2 text-sm text-gray-500">
-            Supported formats: JPG, JPEG, PNG, WebP. Max size: 500KB
-          </div>
-        </Form.Item>
+            <Select size="large" placeholder="Select product">
+              <Option value="Reseller Hosting">
+                <div className="flex items-center gap-2">
+                  <CloudServerOutlined className="text-lg" />
+                  <span>Reseller Hosting</span>
+                </div>
+              </Option>
+              <Option value="Website Development">
+                <div className="flex items-center gap-2">
+                  <DesktopOutlined className="text-lg" />
+                  <span>Website Development</span>
+                </div>
+              </Option>
+              <Option value="Console Management">
+                <div className="flex items-center gap-2">
+                  <SettingOutlined className="text-lg" />
+                  <span>Console Management</span>
+                </div>
+              </Option>
+            </Select>
+          </Form.Item>
 
-        <Form.Item className="mb-0 mt-6">
-          <div className="flex gap-3 justify-end">
-            <Button onClick={handleCancel} disabled={loading} size="large">
-              Cancel
-            </Button>
-            <Button
-              type="primary"
-              htmlType="submit"
-              loading={loading}
+          <Form.Item
+            label="Price"
+            name="price"
+            rules={[{ required: true, message: "Please enter product price" }]}
+          >
+            <InputNumber
+              prefix="₦"
+              className="w-full"
+              min={0}
+              step={0.01}
               size="large"
+            />
+          </Form.Item>
+
+          <Form.Item
+            label="Description"
+            name="description"
+            rules={[
+              { required: true, message: "Please enter product description" },
+              {
+                min: 10,
+                message: "Description must be at least 10 characters",
+              },
+            ]}
+          >
+            <Input.TextArea rows={3} size="large" />
+          </Form.Item>
+
+          <Form.Item
+            label="Image"
+            name="images"
+            rules={[
+              {
+                validator: async (_, value) => {
+                  if (!imageUrl) {
+                    throw new Error("Please upload an image");
+                  }
+                },
+              },
+            ]}
+          >
+            <Upload
+              listType="picture-card"
+              fileList={
+                imageUrl
+                  ? [
+                      {
+                        uid: "-1",
+                        name: "image",
+                        status: "done",
+                        url: imageUrl,
+                      },
+                    ]
+                  : []
+              }
+              beforeUpload={handleImageUpload}
+              onRemove={() => {
+                setImageUrl("");
+                return true;
+              }}
+              accept=".jpg,.jpeg,.png,.webp"
             >
-              Add Product
-            </Button>
-          </div>
-        </Form.Item>
-      </Form>
-    </Modal>
+              {!imageUrl && (
+                <div>
+                  <PlusOutlined />
+                  <div className="mt-2">Upload</div>
+                </div>
+              )}
+            </Upload>
+            <div className="mt-2 text-sm text-gray-500">
+              Supported formats: JPG, JPEG, PNG, WebP. Max size: 50KB
+            </div>
+          </Form.Item>
+
+          <Form.Item className="mb-0 mt-6">
+            <div className="flex gap-3 justify-end">
+              <Button onClick={handleCancel} disabled={loading} size="large">
+                Cancel
+              </Button>
+              <Button
+                type="primary"
+                htmlType="submit"
+                loading={loading}
+                size="large"
+              >
+                Add Product
+              </Button>
+            </div>
+          </Form.Item>
+        </Form>
+      </Modal>
+    </>
   );
 }

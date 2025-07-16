@@ -299,24 +299,13 @@ const AppSidebar: React.FC = () => {
       onMouseLeave={() => setIsHovered(false)}
     >
       <div
-        className={`py-8 flex ${
+        className={`py-4 md:py-8 flex ${
           !isExpanded && !isHovered ? "lg:justify-center" : "justify-start"
         }`}
       >
         <Link to="/">
           {isExpanded || isHovered || isMobileOpen ? (
-            <>
-              <img
-                className="hidden w-40 h-auto md:w-50 md:h-auto dark:hidden"
-                src={Logo}
-                alt="Logo"
-              />
-              <img
-                className="hidden w-40 h-auto md:w-50 md:h-auto dark:block invert"
-                src={Logo}
-                alt="Logo"
-              />
-            </>
+            <></>
           ) : (
             <img
               src={LogoIcon}

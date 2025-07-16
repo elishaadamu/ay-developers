@@ -334,10 +334,10 @@ export default function AddUsers() {
           lastName: formData.lastName,
           email: formData.email,
           role: formData.role,
-          stateOfResidence: formData.stateOfResidence,
-          localGovernment: formData.localGovernment,
-          phoneNumber: formData.phoneNumber,
-          passport: formData.passport, // Base64 string
+          state: formData.stateOfResidence,
+          lga: formData.localGovernment,
+          phone: formData.phoneNumber,
+          photo: formData.passport, // Base64 string
         };
 
         console.log("Payload to be sent:", payload);

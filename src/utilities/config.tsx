@@ -7,7 +7,7 @@ export const API_CONFIG = {
       UserData: "/api/users/profile/",
       UserUpdate: "/api/auth/updateProfile",
       AddProducts: "/api/products/add",
-      AddUsers: "/api/users/add",
+      AddUsers: "/api/auth/register",
     },
   },
 };
