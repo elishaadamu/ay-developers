@@ -6,77 +6,27 @@ import dayjs from "dayjs";
 import isBetween from "dayjs/plugin/isBetween";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PageMeta from "../../components/common/PageMeta";
-
 import ProductTable from "../../components/ecommerce/ProductTable";
 import AddProductModal from "../../components/ecommerce/AddProductsModal";
 import PerformanceModal from "../../components/ecommerce/PerformanceModal";
 import SGListModal from "../../components/ecommerce/SGListModal";
 import { apiUrl, API_CONFIG } from "../../utilities/config";
+import { decryptData } from "../../utilities/encryption";
+
 dayjs.extend(isBetween);
 
+// Update the interface to handle _id from API
 interface Product {
-  id: number;
+  id?: number;
+  _id?: string; // Add _id for MongoDB
   name: string;
   price: number;
   description: string;
-  images: string[];
+  images: string; // Changed from string[] to string since API returns base64 string
   status: "Active" | "Inactive";
   createdDate: string;
   salesCount: number;
 }
-
-const sampleProducts: Product[] = [
-  {
-    id: 1,
-    name: "Basic Reseller Hosting",
-    price: 299.99,
-    description: "Entry level reseller hosting package with essential features",
-    images: ["https://placehold.co/100x100"],
-    status: "Active",
-    createdDate: new Date().toISOString(),
-    salesCount: 15,
-  },
-  {
-    id: 2,
-    name: "Premium Reseller Hosting",
-    price: 599.99,
-    description: "Advanced reseller hosting with premium resources and support",
-    images: ["https://placehold.co/100x100"],
-    status: "Active",
-    createdDate: new Date().toISOString(),
-    salesCount: 8,
-  },
-  {
-    id: 3,
-    name: "Business Website Package",
-    price: 799.99,
-    description: "Professional website development for businesses",
-    images: ["https://placehold.co/100x100"],
-    status: "Active",
-    createdDate: new Date().toISOString(),
-    salesCount: 12,
-  },
-  {
-    id: 4,
-    name: "E-commerce Website",
-    price: 1499.99,
-    description: "Complete e-commerce website solution",
-    images: ["https://placehold.co/100x100"],
-    status: "Inactive",
-    createdDate: new Date().toISOString(),
-    salesCount: 5,
-  },
-  {
-    id: 5,
-    name: "Premium Console Service",
-    price: 399.99,
-    description: "24/7 console management and monitoring",
-    images: ["https://placehold.co/100x100"],
-    status: "Active",
-    createdDate: new Date().toISOString(),
-    salesCount: 20,
-  },
-];
 
 export default function Products() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -92,18 +42,36 @@ export default function Products() {
   const [dateRange, setDateRange] = useState<
     [dayjs.Dayjs | null, dayjs.Dayjs | null]
   >([null, null]);
+  const [userData, setUserData] = useState<any>(null);
+
+  // Add useEffect to get user data
+  useEffect(() => {
+    try {
+      const encryptedUserData = localStorage.getItem("userData");
+      if (encryptedUserData) {
+        const decryptedUserData = decryptData(encryptedUserData);
+        setUserData(decryptedUserData);
+      }
+    } catch (error) {
+      console.error("Failed to decrypt user data:", error);
+    }
+  }, []);
 
   // Fetch products from API
   const fetchProducts = async () => {
     setLoading(true);
     try {
-      // Simulate API call delay
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      setProducts(sampleProducts);
-      console.log("✅ Fetched products:", sampleProducts);
+      console.log("🔄 Fetching products from API...");
+      const response = await axios.get(
+        apiUrl(API_CONFIG.ENDPOINTS.AUTH.GetProducts)
+      );
+
+      console.log("✅ Products fetched successfully:", response.data);
+      setProducts(response.data.products || response.data || []);
     } catch (error) {
       console.error("❌ Error fetching products:", error);
       message.error("Failed to fetch products");
+      setProducts([]); // Set empty array on error
     } finally {
       setLoading(false);
     }
@@ -116,57 +84,92 @@ export default function Products() {
     try {
       const payload = {
         ...productData,
+        userId: userData?.id,
         createdDate: new Date().toISOString(),
-        salesCount: 0, // Initialize with 0 sales for new products
+        salesCount: 0,
       };
 
       console.log("📤 Sending product payload:", payload);
-      console.log(
-        "🔗 API endpoint:",
-        apiUrl(API_CONFIG.ENDPOINTS.AUTH.AddProducts)
-      );
-
       const response = await axios.post(
         apiUrl(API_CONFIG.ENDPOINTS.AUTH.AddProducts),
         payload
       );
 
       console.log("✅ Product added successfully:", response.data);
-      console.log("📊 Response status:", response.status);
-      console.log("📋 Response headers:", response.headers);
+      message.success("Product added successfully");
 
-      // Add the new product to the local state
-      setProducts((prev) => [...prev, response.data]);
-      setShowAddModal(false);
-
-      // Optionally refresh the list
+      // Refresh the products list
       await fetchProducts();
+      setShowAddModal(false);
     } catch (error) {
       console.error("❌ Error adding product:", error);
-
-      // Log more detailed error information
       if (axios.isAxiosError(error)) {
         console.error("📋 Error response:", error.response?.data);
         console.error("📊 Error status:", error.response?.status);
-        console.error("🔗 Error config:", error.config);
       }
-
-      throw error; // Re-throw to let modal handle the error
+      throw error;
     }
   };
 
-  // Update the deleteProduct function to work with sample data
-  const deleteProduct = async (productId: number) => {
+  // Update product via API
+  const updateProduct = async (
+    productId: string | number,
+    productData: Partial<Product>
+  ) => {
     try {
-      // Simulate API call delay
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      setProducts((prevProducts) =>
-        prevProducts.filter((product) => product.id !== productId)
+      console.log("🔄 Updating product:", productId, productData);
+      const response = await axios.put(
+        apiUrl(API_CONFIG.ENDPOINTS.AUTH.UpdateProduct + productId),
+        {
+          ...productData,
+          userId: userData?.id,
+        }
       );
-      message.success("Product deleted successfully");
+
+      console.log("✅ Product updated successfully:", response.data);
+      message.success("Product updated successfully");
+
+      // Refresh the products list
+      await fetchProducts();
     } catch (error) {
-      console.error("Error deleting product:", error);
-      message.error("Failed to delete product");
+      console.error("❌ Error updating product:", error);
+      if (axios.isAxiosError(error)) {
+        console.error("📋 Error response:", error.response?.data);
+        console.error("📊 Error status:", error.response?.status);
+        message.error(
+          error.response?.data?.message || "Failed to update product"
+        );
+      } else {
+        message.error("Failed to update product");
+      }
+      throw error;
+    }
+  };
+
+  // Delete product via API
+  const deleteProduct = async (productId: string | number) => {
+    try {
+      console.log("🗑️ Deleting product:", productId);
+      const response = await axios.delete(
+        apiUrl(API_CONFIG.ENDPOINTS.AUTH.DeleteProduct + productId)
+      );
+
+      console.log("✅ Product deleted successfully:", response.data);
+      message.success("Product deleted successfully");
+
+      // Refresh the products list
+      await fetchProducts();
+    } catch (error) {
+      console.error("❌ Error deleting product:", error);
+      if (axios.isAxiosError(error)) {
+        console.error("📋 Error response:", error.response?.data);
+        console.error("📊 Error status:", error.response?.status);
+        message.error(
+          error.response?.data?.message || "Failed to delete product"
+        );
+      } else {
+        message.error("Failed to delete product");
+      }
     }
   };
 
@@ -222,7 +225,7 @@ export default function Products() {
             <h3 className="mb-2 font-semibold text-gray-800 dark:text-white/90 text-xl md:text-2xl">
               Products Management
             </h3>
-            <p className="text-gray-600  dark:text-gray-400 text-[12px] md:text-sm">
+            <p className="text-gray-600 dark:text-gray-400 text-[12px] md:text-sm">
               Manage products, track performance, and handle S&G lists
             </p>
           </div>
@@ -232,19 +235,6 @@ export default function Products() {
               onClick={() => setShowAddModal(true)}
               className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-[11px] md:text-[14px] font-medium text-white hover:bg-blue-700"
             >
-              <svg
-                className="h-3 w-3 md:h-5 md:w-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 4v16m8-8H4"
-                />
-              </svg>
               Add Product
             </button>
 
@@ -252,19 +242,6 @@ export default function Products() {
               onClick={() => setShowSGListModal(true)}
               className="inline-flex items-center gap-2 rounded-lg bg-purple-600 px-4 py-2.5 text-[11px] md:text-[14px] font-medium text-white hover:bg-purple-700"
             >
-              <svg
-                className="h-3 w-3 md:h-5 md:w-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                />
-              </svg>
               Manage S&G Lists
             </button>
 
@@ -272,19 +249,6 @@ export default function Products() {
               onClick={() => setShowPerformanceModal(true)}
               className="inline-flex items-center gap-2 rounded-lg bg-green-600 px-4 py-2.5 text-[11px] md:text-[14px] font-medium text-white hover:bg-green-700"
             >
-              <svg
-                className="h-3 w-3 md:h-5 md:w-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-                />
-              </svg>
               View Performance
             </button>
           </div>
@@ -294,21 +258,6 @@ export default function Products() {
         <div className="flex flex-col gap-4 mb-6 sm:flex-row sm:items-center">
           {/* Search Bar */}
           <div className="relative flex-1">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <svg
-                className="h-5 w-5 text-gray-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                />
-              </svg>
-            </div>
             <input
               type="text"
               placeholder="Search products..."
@@ -317,17 +266,6 @@ export default function Products() {
               className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg bg-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:placeholder-gray-400"
             />
           </div>
-
-          {/* Status Filter */}
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-700 dark:text-white"
-          >
-            <option value="">All Status</option>
-            <option value="Active">Active</option>
-            <option value="Inactive">Inactive</option>
-          </select>
 
           {/* Date Range Picker */}
           <DatePicker.RangePicker
@@ -344,6 +282,12 @@ export default function Products() {
           products={filteredProducts}
           loading={loading}
           onDelete={deleteProduct}
+          onUpdate={updateProduct}
+          onEdit={(product) => {
+            // Handle edit functionality
+            console.log("Edit product:", product);
+            // You can add edit modal logic here
+          }}
         />
 
         {/* Modals */}

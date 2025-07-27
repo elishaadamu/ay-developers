@@ -16,6 +16,7 @@ import {
   CloudServerOutlined,
   DesktopOutlined,
   SettingOutlined,
+  PicLeftOutlined,
 } from "@ant-design/icons";
 
 // Update the Product interface
@@ -188,6 +189,12 @@ export default function AddProductModal({
                 <div className="flex items-center gap-2">
                   <SettingOutlined className="text-lg" />
                   <span>Console Management</span>
+                </div>
+              </Option>
+              <Option value="Others">
+                <div className="flex items-center gap-2">
+                  <PicLeftOutlined className="text-lg" />
+                  <span>Others</span>
                 </div>
               </Option>
             </Select>
