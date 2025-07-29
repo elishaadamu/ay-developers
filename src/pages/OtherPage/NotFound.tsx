@@ -1,44 +1,166 @@
-import GridShape from "../../components/common/GridShape";
-import { Link } from "react-router";
-import PageMeta from "../../components/common/PageMeta";
+import { useState, useEffect, useRef } from "react";
+import { Link, useNavigate } from "react-router-dom";
 
-export default function NotFound() {
+export default function DigitalClock() {
+  const [date, setDate] = useState(new Date());
+  const [isRunning, setIsRunning] = useState(false);
+  const [countdown, setCountdown] = useState(10);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const navigate = useNavigate();
+
+  // Auto-start the clock when component mounts
+  useEffect(() => {
+    startClock();
+    return () => {
+      // Cleanup interval on component unmount
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+    };
+  }, []);
+
+  // Auto-redirect countdown
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          navigate("/");
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [navigate]);
+
+  const startClock = () => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+    }
+
+    intervalRef.current = setInterval(() => {
+      setDate(new Date());
+    }, 1000);
+
+    setIsRunning(true);
+  };
+
+  const stopClock = () => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+    setIsRunning(false);
+  };
+
+  const resetClock = () => {
+    setDate(new Date());
+  };
+
+  const handleGoHome = () => {
+    navigate("/");
+  };
+
+  const handleGoBack = () => {
+    window.history.back();
+  };
+
   return (
-    <>
-      <PageMeta
-        title="AY Developers | 404 Not Found"
-        description="Page not found"
-      />
-      <div className="relative flex flex-col items-center justify-center min-h-screen p-6 overflow-hidden z-1">
-        <GridShape />
-        <div className="mx-auto w-full max-w-[242px] text-center sm:max-w-[472px]">
-          <h1 className="mb-8 font-bold text-gray-800 text-title-md dark:text-white/90 xl:text-title-2xl">
-            ERROR
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8 text-center max-w-md mx-4">
+        {/* 404 Display */}
+        <div className="bg-gradient-to-r from-red-500 to-pink-500 rounded-lg p-6 mb-6">
+          <div className="font-mono text-6xl md:text-8xl text-white font-bold">
+            404
+          </div>
+          <div className="text-red-100 text-lg mt-2 font-medium">
+            Page Not Found
+          </div>
+        </div>
+
+        {/* Error Message */}
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-3">
+            Oops! Page Not Found
           </h1>
-
-          <img src="/images/error/404.svg" alt="404" className="dark:hidden" />
-          <img
-            src="/images/error/404-dark.svg"
-            alt="404"
-            className="hidden dark:block"
-          />
-
-          <p className="mt-10 mb-6 text-base text-gray-700 dark:text-gray-400 sm:text-lg">
-            We can’t seem to find the page you are looking for!
+          <p className="text-gray-600 dark:text-gray-400 text-sm">
+            The page you're looking for doesn't exist or has been moved. Don't
+            worry, it happens to the best of us!
           </p>
+        </div>
+
+        {/* Auto-redirect countdown */}
+        <div className="bg-gray-100 dark:bg-gray-700 rounded-lg p-4 mb-6">
+          <div className="text-gray-700 dark:text-gray-300 text-sm mb-2">
+            Redirecting to home page in:
+          </div>
+          <div className="font-mono text-3xl font-bold text-blue-600 dark:text-blue-400">
+            {countdown}s
+          </div>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex flex-col gap-3">
+          <button
+            onClick={handleGoHome}
+            className="px-6 py-3 rounded-lg font-medium bg-blue-600 text-white hover:bg-blue-700 transition-colors duration-200"
+          >
+            Go to Homepage
+          </button>
+
+          <button
+            onClick={handleGoBack}
+            className="px-6 py-3 rounded-lg font-medium bg-gray-600 text-white hover:bg-gray-700 transition-colors duration-200"
+          >
+            Go Back
+          </button>
 
           <Link
-            to="/"
-            className="inline-flex items-center justify-center rounded-lg border border-gray-300 bg-white px-5 py-3.5 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] dark:hover:text-gray-200"
+            to="/contact"
+            className="px-6 py-3 rounded-lg font-medium border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
           >
-            Back to Home Page
+            Contact Support
           </Link>
         </div>
-        {/* <!-- Footer --> */}
-        <p className="absolute text-sm text-center text-gray-500 -translate-x-1/2 bottom-6 left-1/2 dark:text-gray-400">
-          &copy; {new Date().getFullYear()} - AY Developers
-        </p>
+
+        {/* Status Indicator */}
+        <div className="mt-6">
+          <span className="inline-flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+            <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></div>
+            Error 404 - Resource Not Found
+          </span>
+        </div>
+
+        {/* Additional Help Links */}
+        <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+          <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+            Need help? Try these:
+          </p>
+          <div className="flex flex-wrap gap-2 justify-center">
+            <Link
+              to="/"
+              className="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+            >
+              Dashboard
+            </Link>
+            <span className="text-gray-300">•</span>
+            <Link
+              to="/products"
+              className="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+            >
+              Products
+            </Link>
+            <span className="text-gray-300">•</span>
+            <Link
+              to="/profile"
+              className="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+            >
+              Profile
+            </Link>
+          </div>
+        </div>
       </div>
-    </>
+    </div>
   );
 }

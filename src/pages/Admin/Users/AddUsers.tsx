@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react";
 import { notification } from "antd";
 import axios from "axios";
-import ComponentCard from "../../components/common/ComponentCard";
-import Label from "../../components/form/Label";
-import Input from "../../components/form/input/InputField";
-import Select from "../../components/form/Select";
-import { API_CONFIG, apiUrl } from "../../utilities/config";
-import PageMeta from "../../components/common/PageMeta";
+import ComponentCard from "../../../components/common/ComponentCard";
+import Label from "../../../components/form/Label";
+import Input from "../../../components/form/input/InputField";
+import Select from "../../../components/form/Select";
+import { API_CONFIG, apiUrl } from "../../../utilities/config";
+import PageMeta from "../../../components/common/PageMeta";
 
 interface UserForm {
   firstName: string;
@@ -75,7 +75,7 @@ export default function AddUsers() {
 
   // Options for role dropdown
   const roleOptions = [
-    { value: "S/GManager", label: "Sales & Growth Manager" },
+    { value: "SGManager", label: "Sales & Growth Manager" },
     { value: "ambassador", label: "Ambassador" },
   ];
 

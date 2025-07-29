@@ -13,6 +13,7 @@ interface SignUpFormData {
   firstName: string;
   lastName: string;
   email: string;
+  phone: string; // Add phone field
   password: string;
 }
 
@@ -24,6 +25,7 @@ export default function SignUpForm() {
     firstName: "",
     lastName: "",
     email: "",
+    phone: "", // Add phone field
     password: "",
   });
 
@@ -39,7 +41,7 @@ export default function SignUpForm() {
   };
 
   const validateForm = (): boolean => {
-    const { firstName, lastName, email, password } = formData;
+    const { firstName, lastName, email, phone, password } = formData;
 
     if (!firstName.trim()) {
       api.error({
@@ -68,10 +70,39 @@ export default function SignUpForm() {
       return false;
     }
 
+    if (!phone.trim()) {
+      api.error({
+        message: "Validation Error",
+        description: "Phone number is required",
+        placement: "topRight",
+      });
+      return false;
+    }
+
+    // Basic phone validation
+    const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
+    if (!phoneRegex.test(phone.replace(/\s/g, ""))) {
+      api.error({
+        message: "Validation Error",
+        description: "Please enter a valid phone number",
+        placement: "topRight",
+      });
+      return false;
+    }
+
     if (!password.trim()) {
       api.error({
         message: "Validation Error",
         description: "Password is required",
+        placement: "topRight",
+      });
+      return false;
+    }
+
+    if (password.length < 6) {
+      api.error({
+        message: "Validation Error",
+        description: "Password must be at least 6 characters long",
         placement: "topRight",
       });
       return false;
@@ -101,6 +132,7 @@ export default function SignUpForm() {
         firstName: formData.firstName,
         lastName: formData.lastName,
         email: formData.email,
+        phone: formData.phone, // Add phone to payload
         password: formData.password,
       };
 
@@ -125,6 +157,7 @@ export default function SignUpForm() {
         firstName: "",
         lastName: "",
         email: "",
+        phone: "", // Reset phone field
         password: "",
       });
       setIsChecked(false);
@@ -159,7 +192,7 @@ export default function SignUpForm() {
               Sign Up
             </h1>
             <p className="text-sm text-gray-500 dark:text-gray-400">
-              Enter your email and password to sign up!
+              Enter your details to create your account!
             </p>
           </div>
           <div>
@@ -212,6 +245,21 @@ export default function SignUpForm() {
                     disabled={isLoading}
                   />
                 </div>
+                {/* Phone Number */}
+                <div>
+                  <Label>
+                    Phone Number<span className="text-error-500">*</span>
+                  </Label>
+                  <Input
+                    type="tel"
+                    id="phone"
+                    name="phone"
+                    placeholder="Enter your phone number (e.g., +234 801 234 5678)"
+                    value={formData.phone}
+                    onChange={handleInputChange}
+                    disabled={isLoading}
+                  />
+                </div>
                 {/* Password */}
                 <div>
                   <Label>
@@ -219,7 +267,7 @@ export default function SignUpForm() {
                   </Label>
                   <div className="relative">
                     <Input
-                      placeholder="Enter your password"
+                      placeholder="Enter your password (min. 6 characters)"
                       type={showPassword ? "text" : "password"}
                       name="password"
                       value={formData.password}

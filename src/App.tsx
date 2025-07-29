@@ -30,7 +30,9 @@ import Promotions from "./pages/Admin/Promotions";
 import PayoutWithdrawal from "./pages/Admin/PayoutWithdrawal";
 import Reports from "./pages/Admin/Reports";
 import Settings from "./pages/Admin/Settings";
-import AddUsers from "./pages/Admin/AddUsers";
+import AddUsers from "./pages/Admin/Users/AddUsers";
+import Ambassador from "./pages/Admin/Users/Ambassador";
+import SGManagers from "./pages/Admin/Users/SGManager";
 
 export default function App() {
   const [userData, setUserData] = useState<UserData | null>(null);
@@ -95,6 +97,8 @@ export default function App() {
 
             {/* Main Menu Pages */}
             <Route path="/add-users" element={<AddUsers />} />
+            <Route path="/ambassadors" element={<Ambassador />} />
+            <Route path="/sg-managers" element={<SGManagers />} />
             <Route path="/tickets" element={<Tickets />} />
             <Route path="/products" element={<Products />} />
             <Route path="/customers" element={<Customers />} />

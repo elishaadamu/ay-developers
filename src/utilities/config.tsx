@@ -11,6 +11,11 @@ export const API_CONFIG = {
       AddUsers: "/api/auth/register",
       UpdateProduct: "/api/products/",
       DeleteProduct: "/api/products/",
+      SuspendUser: "/api/users/suspend/",
+      ActivateUser: "/api/users/activate/",
+      GetUsers: "/api/users",
+      UpdateUser: "/api/users/",
+      DeleteUser: "/api/users/",
     },
   },
 };
